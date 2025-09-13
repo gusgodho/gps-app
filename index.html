@@ -1,161 +1,255 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>GPS Logger</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      color: #333;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-    }
-    header {
-      background: #4CAF50;
-      color: white;
-      width: 100%;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 2rem;
-      width: 100%;
-      max-width: 800px;
-    }
-    button {
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 1.5rem 2.5rem;
-      margin: 1rem;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      width: 90%;
-      max-width: 400px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    #status {
-      margin: 1rem;
-      font-size: 1rem;
-      color: #555;
-      text-align: center;
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 1.5rem;
-      width: 100%;
-      background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 0.75rem;
-      text-align: center;
-    }
-    th {
-      background: #4CAF50;
-      color: white;
-    }
-    footer {
-      background: #ddd;
-      width: 100%;
-      padding: 0.5rem;
-      text-align: center;
-      font-size: 0.9rem;
-      color: #444;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puntos de Interes GPS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .btn-primary {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        /* Estilo para la tabla en modo oscuro */
+        .table-dark {
+            background-color: #2d3748; /* gray-800 */
+        }
+        .table-dark th {
+            background-color: #1a202c; /* gray-900 */
+        }
+        .table-dark tr:nth-child(even) {
+            background-color: #2d3748; /* gray-800 */
+        }
+        .table-dark tr:nth-child(odd) {
+            background-color: #4a5568; /* gray-700 */
+        }
+    </style>
 </head>
-<body>
-  <header>GPS Logger</header>
-  <main>
-    <button id="getLocation">📍 Obtener ubicación</button>
-    <button id="exportCSV">💾 Exportar CSV</button>
-    <p id="status">Presiona un botón para comenzar.</p>
+<body class="bg-gray-900 text-white min-h-screen p-4 flex flex-col items-center">
 
-    <table id="coordsTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Latitud</th>
-          <th>Longitud</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </main>
-  <footer>Desarrollado con ❤️ usando JavaScript</footer>
+    <div class="w-full max-w-4xl mx-auto">
+        <!-- Titulo -->
+        <header class="text-center mb-6">
+            <h1 class="text-4xl font-bold text-cyan-400">Puntos de Inter谷s GPS</h1>
+            <p class="text-gray-400">Guarda y exporta tus ubicaciones con un solo clic.</p>
+        </header>
 
-  <script>
-    let coords = [];
-    let counter = 0;
+        <!-- Controles Principales -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg mb-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button id="saveLocationBtn" class="btn-primary bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg shadow-md w-full sm:w-auto flex items-center justify-center gap-2">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="btnText">Guardar Ubicacion</span>
+                <i id="btnSpinner" class="fas fa-spinner fa-spin hidden"></i>
+            </button>
+            <button id="downloadBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-download"></i>
+                Descargar Tabla (CSV)
+            </button>
+        </div>
 
-    const statusEl = document.getElementById("status");
-    const tableBody = document.querySelector("#coordsTable tbody");
+        <!-- Mensajes de Estado -->
+        <div id="statusMessage" class="text-center mb-4 min-h-[24px]"></div>
 
-    function renderTable() {
-      tableBody.innerHTML = "";
-      coords.forEach((c) => {
-        let row = `<tr>
-          <td>${c.id}</td>
-          <td>${c.lat}</td>
-          <td>${c.lon}</td>
-        </tr>`;
-        tableBody.insertAdjacentHTML("beforeend", row);
-      });
-    }
+        <!-- Tabla de Puntos Guardados -->
+        <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <h2 class="text-2xl font-bold p-4 bg-gray-900 border-b border-gray-700">Ubicaciones Guardadas</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left table-auto">
+                    <thead class="bg-gray-900">
+                        <tr>
+                            <th class="p-3 text-sm font-semibold tracking-wide">ID</th>
+                            <th class="p-3 text-sm font-semibold tracking-wide">Latitud</th>
+                            <th class="p-3 text-sm font-semibold tracking-wide">Longitud</th>
+                            <th class="p-3 text-sm font-semibold tracking-wide">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationsTableBody" class="divide-y divide-gray-700">
+                        <tr id="no-data-row">
+                            <td colspan="4" class="p-4 text-center text-gray-500">Aun no hay puntos guardados.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    document.getElementById("getLocation").addEventListener("click", () => {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude.toFixed(6);
-            const lon = position.coords.longitude.toFixed(6);
-            counter++;
-            coords.unshift({id: counter, lat, lon}); // lo más nuevo primero
-            statusEl.textContent = `Guardado: ${lat}, ${lon}`;
-            renderTable();
-          },
-          (error) => {
-            statusEl.textContent = "Error: " + error.message;
-          }
-        );
-      } else {
-        statusEl.textContent = "Tu navegador no soporta geolocalización";
-      }
-    });
+    <script>
+        // --- ELEMENTOS DEL DOM ---
+        const saveLocationBtn = document.getElementById('saveLocationBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const locationsTableBody = document.getElementById('locationsTableBody');
+        const noDataRow = document.getElementById('no-data-row');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
 
-    document.getElementById("exportCSV").addEventListener("click", () => {
-      if (coords.length === 0) {
-        statusEl.textContent = "No hay coordenadas guardadas aún.";
-        return;
-      }
-      let csv = "id,lat,lon\\n" + coords.map(c => `${c.id},${c.lat},${c.lon}`).join("\\n");
-      let blob = new Blob([csv], { type: "text/csv" });
-      let url = URL.createObjectURL(blob);
-      let a = document.createElement("a");
-      a.href = url;
-      a.download = "coordenadas.csv";
-      a.click();
-      statusEl.textContent = "Archivo CSV exportado con éxito ✅";
-    });
-  </script>
+        // --- ESTADO DE LA APLICACION ---
+        let savedLocations = [];
+        let locationIdCounter = 1;
+        let isFetchingLocation = false;
+
+        // --- FUNCIONES PRINCIPALES ---
+
+        /**
+         * Obtiene la ubicacion actual del usuario usando la API de Geolocalizacion.
+         */
+        function getCurrentLocation() {
+            if (isFetchingLocation) return;
+            if (!navigator.geolocation) {
+                displayMessage('La geolocalizacion no es soportada por tu navegador.', 'error');
+                return;
+            }
+
+            setButtonLoading(true);
+            displayMessage('Obteniendo coordenadas GPS...', 'info');
+
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        }
+
+        /**
+         * Callback para cuando la geolocalizacion es exitosa.
+         * @param {GeolocationPosition} position - El objeto con los datos de la posicion.
+         */
+        function onSuccess(position) {
+            const { latitude, longitude } = position.coords;
+            const newLocation = {
+                id: locationIdCounter++,
+                lat: latitude.toFixed(6), // 6 decimales para buena precision
+                lon: longitude.toFixed(6),
+                timestamp: new Date().toLocaleString()
+            };
+
+            savedLocations.push(newLocation);
+            updateTable();
+            displayMessage(`Ubicacion #${newLocation.id} guardada con exito.`, 'success');
+            setButtonLoading(false);
+            updateDownloadButtonState();
+        }
+
+        /**
+         * Callback para cuando la geolocalizacion falla.
+         * @param {GeolocationPositionError} error - El objeto de error.
+         */
+        function onError(error) {
+            let errorMessage = 'Ocurrio un error desconocido.';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Permiso de ubicacion denegado.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'La informacion de ubicacion no esta disponible.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'La solicitud de ubicacion tarda demasiado.';
+                    break;
+            }
+            displayMessage(errorMessage, 'error');
+            setButtonLoading(false);
+        }
+        
+        /**
+         * Genera un archivo CSV y lo descarga.
+         */
+        function downloadTableAsCSV() {
+            if (savedLocations.length === 0) return;
+
+            const headers = ['ID', 'Latitud', 'Longitud', 'Timestamp'];
+            const csvRows = [headers.join(',')]; // Encabezado del CSV
+
+            savedLocations.forEach(loc => {
+                const values = [loc.id, loc.lat, loc.lon, `"${loc.timestamp}"`];
+                csvRows.push(values.join(','));
+            });
+
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'puntos_gps.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- FUNCIONES DE UI (INTERFAZ DE USUARIO) ---
+
+        /**
+         * Actualiza la tabla en el HTML con los datos guardados.
+         */
+        function updateTable() {
+            locationsTableBody.innerHTML = ''; // Limpiar tabla
+            if (savedLocations.length === 0) {
+                locationsTableBody.appendChild(noDataRow);
+                return;
+            }
+
+            savedLocations.forEach(loc => {
+                const row = document.createElement('tr');
+                row.className = "bg-gray-800 hover:bg-gray-700";
+                row.innerHTML = `
+                    <td class="p-3 text-sm text-gray-300 font-bold">${loc.id}</td>
+                    <td class="p-3 text-sm text-gray-300">${loc.lat}</td>
+                    <td class="p-3 text-sm text-gray-300">${loc.lon}</td>
+                    <td class="p-3 text-sm text-gray-300">${loc.timestamp}</td>
+                `;
+                locationsTableBody.appendChild(row);
+            });
+        }
+        
+        /**
+         * Muestra un mensaje de estado al usuario.
+         * @param {string} message - El texto a mostrar.
+         * @param {'info'|'success'|'error'} type - El tipo de mensaje.
+         */
+        function displayMessage(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = 'text-center mb-4 min-h-[24px] '; // Clases base
+            if (type === 'success') {
+                statusMessage.classList.add('text-green-400');
+            } else if (type === 'error') {
+                statusMessage.classList.add('text-red-400');
+            } else {
+                statusMessage.classList.add('text-cyan-400');
+            }
+        }
+
+        /**
+         * Cambia el estado del boton principal (cargando/normal).
+         * @param {boolean} isLoading - True si esta cargando.
+         */
+        function setButtonLoading(isLoading) {
+            isFetchingLocation = isLoading;
+            saveLocationBtn.disabled = isLoading;
+            btnText.classList.toggle('hidden', isLoading);
+            btnSpinner.classList.toggle('hidden', !isLoading);
+        }
+        
+        /**
+         * Activa o desactiva el boton de descarga.
+         */
+        function updateDownloadButtonState() {
+            downloadBtn.disabled = savedLocations.length === 0;
+        }
+
+        // --- EVENT LISTENERS ---
+        saveLocationBtn.addEventListener('click', getCurrentLocation);
+        downloadBtn.addEventListener('click', downloadTableAsCSV);
+
+    </script>
 </body>
 </html>
