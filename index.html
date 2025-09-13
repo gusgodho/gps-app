@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>GPS Logger</title>
+</head>
+<body>
+  <h2>GPS Logger</h2>
+  <button id="getLocation">Obtener ubicación</button>
+  <button id="exportCSV">Exportar CSV</button>
+  <p id="status"></p>
+
+  <script>
+    const coords = [];
+
+    const statusEl = document.getElementById("status");
+    document.getElementById("getLocation").addEventListener("click", () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            coords.push({lat, lon});
+            statusEl.textContent = `Guardado: ${lat}, ${lon}`;
+          },
+          (error) => {
+            statusEl.textContent = "Error: " + error.message;
+          }
+        );
+      } else {
+        statusEl.textContent = "Tu navegador no soporta geolocalización";
+      }
+    });
+
+    document.getElementById("exportCSV").addEventListener("click", () => {
+      if (coords.length === 0) {
+        statusEl.textContent = "No hay coordenadas guardadas aún.";
+        return;
+      }
+      let csv = "lat,lon\n" + coords.map(c => `${c.lat},${c.lon}`).join("\n");
+      let blob = new Blob([csv], { type: "text/csv" });
+      let url = URL.createObjectURL(blob);
+      let a = document.createElement("a");
+      a.href = url;
+      a.download = "coordenadas.csv";
+      a.click();
+    });
+  </script>
+</body>
+</html>
