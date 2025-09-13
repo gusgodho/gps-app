@@ -3,12 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <title>GPS Logger</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      width: 100%;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem 2rem;
+      margin: 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 80%;
+      max-width: 300px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #status {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #555;
+      text-align: center;
+    }
+    footer {
+      background: #ddd;
+      width: 100%;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #444;
+    }
+  </style>
 </head>
 <body>
-  <h2>GPS Logger</h2>
-  <button id="getLocation">Obtener ubicación</button>
-  <button id="exportCSV">Exportar CSV</button>
-  <p id="status"></p>
+  <header>GPS Logger</header>
+  <main>
+    <button id="getLocation">📍 Obtener ubicación</button>
+    <button id="exportCSV">💾 Exportar CSV</button>
+    <p id="status">Presiona un botón para comenzar.</p>
+  </main>
+  <footer>Desarrollado con ❤️ usando JavaScript</footer>
 
   <script>
     const coords = [];
@@ -44,6 +110,7 @@
       a.href = url;
       a.download = "coordenadas.csv";
       a.click();
+      statusEl.textContent = "Archivo CSV exportado con éxito ✅";
     });
   </script>
 </body>
